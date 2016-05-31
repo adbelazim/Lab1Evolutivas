@@ -5,16 +5,17 @@ function fit = svm_classifier(data,class,sigma,c)
 %utiliza cuando la clase este dada como string
 %en el caso de ionosfera 'g'
 %en el caso de breast cancer 'M'
-%species = cellstr(class);
-%groups = ismember(species,'g');
+species = cellstr(class);
+groups = ismember(species,'M');
 
 %% Randomly select training and test sets.
-%cuando la clase es numerica utilizar esta linea
-[train, test] = crossvalind('holdOut',class);
-%cuando la clase es string utilizar esta linea
-%[train, test] = crossvalind('holdOut',groups);
-%cp = classperf(groups);
-cp = classperf(class);
+%cuando la clase es numerica utilizar estas lineas
+%[train, test] = crossvalind('holdOut',class);
+%cp = classperf(class);
+%cuando la clase es string utilizar estas lineas
+[train, test] = crossvalind('holdOut',groups);
+cp = classperf(groups);
+
 %% Use the svmtrain function to train an SVM classifier using a radial basis function and plot the grouped data.
 %svmStruct = svmtrain(data(train,:),groups(train),'showplot',true);
 
@@ -28,8 +29,8 @@ options = optimset('maxiter',10000,'largescale','off','TolX',5e-4,'TolFun',5e-4)
 
 %se entrena la SVM utilizando un kernel da base radial y escalando los
 %ejemplos de entrada para ayudar en la convergencia del algoritmo.
-svmStruct = svmtrain(data(train,:),class(train),'showplot',false,'kernel_function','rbf','AUTOSCALE',true,'rbf_sigma',sigma,'BoxConstraint',c,'Method','QP','quadprog_opts',options);
-%svmStruct = svmtrain(data(train,:),groups(train),'showplot',false,'kernel_function','rbf','AUTOSCALE',true,'rbf_sigma',sigma,'BoxConstraint',c,'Method','QP','quadprog_opts',options);
+%svmStruct = svmtrain(data(train,:),class(train),'showplot',false,'kernel_function','rbf','AUTOSCALE',true,'rbf_sigma',sigma,'BoxConstraint',c,'Method','QP','quadprog_opts',options);
+svmStruct = svmtrain(data(train,:),groups(train),'showplot',false,'kernel_function','rbf','AUTOSCALE',true,'rbf_sigma',sigma,'BoxConstraint',c,'Method','QP','quadprog_opts',options);
 %svmStruct = svmtrain(data(train,:),groups(train),'showplot',true,'kernel_function','polynomial');
 
 %Se clasifica el conjunto de test en base al modelo obtenido

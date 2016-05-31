@@ -6,6 +6,8 @@ clc;
 tiempo_inicio = cputime;
 
 %se definen variables globales para la lectura de archivo
+global best_gen;
+global best_val;
 global features;
 global class;
 global feat1;
@@ -32,24 +34,27 @@ global feat21;
 global feat22;
 global feat23;
 global feat24;
-%global feat25;
-%global feat26;
-%global feat27;
-%global feat28;
-%global feat29;
-%global feat30;
+global feat25;
+global feat26;
+global feat27;
+global feat28;
+global feat29;
+global feat30;
 %global feat31;
 %global feat32;
 %global feat33;
 %global feat34;
-%global id;
+global id;
 %Se realiza la lectura de los distintos data set
+
+best_gen = [];
+best_val = 0;
 
 %pima indians
 %[feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,class] = textread('pima-indians-diabetes.data.txt' ,'%d%d%d%d%d%f%f%d%d','delimiter', ',');
 
 %wisconsin breast cancer
-%[id,class,feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,feat15,feat16,feat17,feat18,feat19,feat20,feat21,feat22,feat23,feat24,feat25,feat26,feat27,feat28,feat29,feat30] = textread('wdbc.data.txt' ,'%d%s%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f','delimiter', ',');
+[id,class,feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,feat15,feat16,feat17,feat18,feat19,feat20,feat21,feat22,feat23,feat24,feat25,feat26,feat27,feat28,feat29,feat30] = textread('wdbc.data.txt' ,'%d%s%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f','delimiter', ',');
 
 %inosfera
 %[feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,feat15,feat16,feat17,feat18,feat19,feat20,feat21,feat22,feat23,feat24,feat25,feat26,feat27,feat28,feat29,feat30,feat31,feat32,feat33,feat34,class] = textread('ionosphere.data.txt' ,'%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%s','delimiter', ',');
@@ -58,11 +63,11 @@ global feat24;
 %[feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,class] = textread('australian.dat.txt' ,'%d%f%f%d%d%d%f%d%d%d%d%d%d%d%d','delimiter', ' ');
 
 %german ver cual es el delimitador
-[feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,feat15,feat16,feat17,feat18,feat19,feat20,feat21,feat22,feat23,feat24,class] = textread('german.data-numeric.txt' ,'%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d','delimiter', ' ');
+%[feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,feat15,feat16,feat17,feat18,feat19,feat20,feat21,feat22,feat23,feat24,class] = textread('german.data-numeric.txt' ,'%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d','delimiter', ' ');
 
 %Se definen par?metros del algoritmo gen?tico
 tournamentSize = 5; %Tama?o del torneo
-features = 24; %N?mero de features
+features = 30; %N?mero de features
 parameters = 2; %N?mero de parametros de la svm. Se multiplica por 8 para generar los vectores necesarios.
 popSize = 50; %Tama?o poblaci?n inicial
 
@@ -92,14 +97,14 @@ options = gaoptimset(options, 'CrossoverFraction', 0.9); %90% de la siguiente po
 options = gaoptimset(options ,'MutationFcn', {@mutationuniform, 0.1}); %Muta de forma uniforme con ratio de 0.1
 
 %Salida
-options = gaoptimset(options, 'Display', 'iter'); %No muestra ejecuci?n de algoritmo.
+options = gaoptimset(options, 'Display', 'off'); %No muestra ejecuci?n de algoritmo.
 options = gaoptimset(options, 'PlotInterval', 1); %Por cada generaci?n muestra un ploteo
-options = gaoptimset(options,'PlotFcns',{@gaplotbestf @gaplotbestindiv}); %Se plotea el mejor fitness y el fitness medio
+options = gaoptimset(options,'PlotFcns',{@gaplotbestf}); %Se plotea el mejor fitness y el fitness medio
 
 [x, Fval, ~, Output, population, ~]= ga(@fitness,features+(parameters*8),options);
 
-fprintf('The best gen was : \n');
-disp(x)
+%fprintf('The best gen was : \n');
+%disp(x)
 %fprintf('The final population was: \n');
 %disp(population)
 fprintf('The number of generations was : %d\n', Output.generations);
@@ -109,12 +114,18 @@ fprintf('The best function value found was : %g\n', Fval);
 %se calcula el tiempo total de computo en CPU
 total = cputime - tiempo_inicio;
 fprintf('The computational time is : %g\n', total);
+
+fprintf('The best gen was: ');
+disp(x);
+fprintf('The best fitness was: %d\n', best_val);
 end
 
 %Funci?n de fitness que se basa en el performance logrado por la SVM.
 function val = fitness(x) 
 
 %se llaman las variables globales
+global best_gen;
+global best_val;
 global features;
 global class;
 global feat1;
@@ -141,12 +152,12 @@ global feat21;
 global feat22;
 global feat23;
 global feat24;
-%global feat25;
-%global feat26;
-%global feat27;
-%global feat28;
-%global feat29;
-%global feat30;
+global feat25;
+global feat26;
+global feat27;
+global feat28;
+global feat29;
+global feat30;
 %global feat31;
 %global feat32;
 %global feat33;
@@ -155,7 +166,7 @@ global feat24;
 %se crea la matriz de caracter?sticas considerando la representaci?n del
 %string del algoritmo gen?tico
 if any(x(1:features))
-    data   = [feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,feat15,feat16,feat17,feat18,feat19,feat20,feat21,feat22,feat23,feat24];
+    data   = [feat1,feat2,feat3,feat4,feat5,feat6,feat7,feat8,feat9,feat10,feat11,feat12,feat13,feat14,feat15,feat16,feat17,feat18,feat19,feat20,feat21,feat22,feat23,feat24,feat25,feat26,feat27,feat28,feat29,feat30];
     data_new = [];
     for i=1:features
         %se a?ade la caracter?stica en caso que sea 1 en el string del GA
@@ -185,6 +196,11 @@ if any(x(1:features))
     %Se multiplica por -1 para transformar el problema de minimizaci?n en
     %maximizaci?n del performance
     val = -val;
+    if best_val > val
+        best_gen = x;
+        best_val = val;
+    end
+    
 else
    val = 0;%Castigo para los que son puros 0 >D
 end
